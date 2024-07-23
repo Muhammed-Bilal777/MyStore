@@ -11,7 +11,7 @@ const productSchema = new mongoose.Schema({
         required :[true, "please enter product price"],
         maxLength : [5,"product price cannot exceed 200 characters"],
     },
-    rating:{
+    ratings:{
         type : Number,
         default : 0,
 
@@ -34,8 +34,16 @@ const productSchema = new mongoose.Schema({
         type : String,
         required:[true,"please enter product category"],
         enum:{
-            values:["Electronics"
-                ,"Phone","Accessories","Cameras","Headphones","smartwatch","tablet","Food","Laptops","books","sports","bags" 
+            values:[ "Electronics",
+                "Cameras",
+                "Laptops",
+                "Accessories",
+                "Headphones",
+                "Food",
+                "Books",
+                "Sports",
+                "Outdoor",
+                "Home",
             ],
             message : "please select a category"
         }
@@ -43,7 +51,14 @@ const productSchema = new mongoose.Schema({
     seller:{
         type : String,
         required:[true,"please enter product seller"],
-    }
+    },
+
+
+    numOfReviews: {
+        type: Number,
+        default: 0,
+      }
+
     ,
     stock:{
         type : Number,
@@ -58,13 +73,13 @@ const productSchema = new mongoose.Schema({
             },
             rating:{
                 type:Number,
-                required:true,
+                required:false,
             },
-            Comment:{
-                type:Number,
-                required:true,
+            comment:{
+                type:String,
+                required:false,
             }
-        }
+        },
     ],
     user:{
         type : mongoose.Schema.ObjectId,

@@ -1,42 +1,98 @@
 import mongoose from "mongoose";
+import bcrypt from "bcrypt"
+import jwt from "jsonwebtoken"
+import crypto from "crypto"
 
 
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: true,
-    trim: true
+    required: [true, "Please enter your name"],
+    maxLength: [50, "Your name cannot exceed 50 characters"],
   },
   email: {
     type: String,
-    required: true,
+    required: [true, "Please enter your email"],
     unique: true,
-    lowercase: true
   },
   password: {
     type: String,
-    required: true,
-    minlength: 8
+    required: [true, "Please enter your password"],
+    minLength: [6, "Your password must be longer than 6 characters"],
+    select: false,
+  },
+  avatar: {
+    public_id: String,
+    url: String,
   },
   role: {
     type: String,
-    enum: ['user', 'admin'],
-    default: 'user'
+    default: "user",
   },
-  createdAt: {
-    type: Date,
-    default: Date.now
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now
-  }
-});
+  resetPasswordToken: String,
+  resetPasswordExpire: Date,
+},
+{ timestamps: true });
 
-userSchema.methods.comparePassword = function(candidatePassword) {
-  return bcrypt.compareSync(candidatePassword, this.password);
-};
+
+//encrypting password
+
+userSchema.pre('save', async function(next){
+  if(!this.isModified('password')){
+    next()
+  }
+
+  this.password= await bcrypt.hash(this.password,10);
+
+})
+
+
+//JWT creating
+
+
+userSchema.methods.getJWToken = function(){
+  return jwt.sign({id:this._id},process.env.JWT_SECRET,{expiresIn:process.env.JWT_EXPIRES_TIME})
+}
+
+ //compare password
+
+userSchema.methods.comparePassword=async function(enteredPassword){
+   return await bcrypt.compare(enteredPassword, this.password)
+}
+
+userSchema.methods.getResetPasswordToken = function(){
+
+
+  //generate token
+
+  const resetToken = crypto.randomBytes(20).toString("hex");
+
+  //hash and set to resetPasswordToken
+
+  this.resetPasswordToken = crypto.createHash("sha256").update(resetToken).digest("hex");
+
+  //set token expire time
+
+  this.resetPasswordExpire = Date.now() + 30 * 60 * 100;
+
+  return resetToken
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 export default mongoose.model('User', userSchema);
 
-  
+  //Generate reset password token
+
+
+ 
